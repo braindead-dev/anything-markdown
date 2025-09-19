@@ -1,3 +1,3 @@
 # anything-markdown
 
-turn anything into markdown!
+turn any platform page into markdown!
