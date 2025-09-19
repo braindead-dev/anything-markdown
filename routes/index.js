@@ -6,7 +6,7 @@ const router = express.Router();
 // Homepage
 router.get("/", (req, res) => {
   res.send(
-    `welcome to anything-markdown! a tool for converting any platform into markdown<br><br>view available platforms <a href="/sources">here</a><br><br>simply visit /[platform]/[slug] to get the markdown version of any page!`,
+    `welcome to anything-markdown! a tool for converting any platform into markdown<br><br>view available platforms <a href="/sources">here</a><br><br>simply visit /[platform]/[slug] to get the markdown version of any page! example: <a href="/wikipedia/Tokyo">/wikipedia/Tokyo</a><br><br>made with ❤️ by <a href="https://github.com/braindead-dev">braindead-dev</a>`,
   );
 });
 
