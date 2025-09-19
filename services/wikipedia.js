@@ -1,9 +1,81 @@
 const { fetch } = require("undici");
 const TurndownService = require("turndown");
+const { gfm } = require("turndown-plugin-gfm");
 
 const turndown = new TurndownService({
   headingStyle: "atx",
   codeBlockStyle: "fenced",
+});
+
+turndown.use(gfm);
+
+// Custom: Convert any HTML table to GFM pipe table (handles captions and <th>)
+turndown.addRule("wikitableToMarkdown", {
+  filter: function (node) {
+    return node.nodeName && node.nodeName.toLowerCase() === "table";
+  },
+  replacement: function (_content, node) {
+    const table = node;
+
+    // Extract caption if any
+    const captionEl = table.querySelector("caption");
+    const caption = captionEl
+      ? turndown.turndown(captionEl.innerHTML).trim()
+      : "";
+
+    // Collect rows
+    const rows = Array.from(table.querySelectorAll("tr"));
+    if (rows.length === 0) return "";
+
+    // Helper to convert cell HTML to inline markdown (no tables expected inside)
+    const cellToMd = (el) => {
+      const html = el.innerHTML || "";
+      return turndown.turndown(html).replace(/\n+/g, " ").trim();
+    };
+
+    // Find header row (first row that has any <th>)
+    let headerCells = null;
+    let dataStartIndex = 0;
+    for (let i = 0; i < rows.length; i++) {
+      const ths = rows[i].querySelectorAll("th");
+      if (ths && ths.length > 0) {
+        headerCells = Array.from(ths).map(cellToMd);
+        dataStartIndex = i + 1;
+        break;
+      }
+    }
+
+    // If no explicit header row, synthesize empty headers based on first row <td>
+    if (!headerCells) {
+      const tds = rows[0].querySelectorAll("td");
+      const colCount = Math.max(1, tds.length);
+      headerCells = Array.from({ length: colCount }).map(() => "");
+      dataStartIndex = 0;
+    }
+
+    // Build markdown lines
+    const lines = [];
+    if (caption) {
+      lines.push(`### ${caption}`);
+      lines.push("");
+    }
+
+    const headerLine = "| " + headerCells.join(" | ") + " |";
+    const separatorLine =
+      "| " + headerCells.map(() => "---").join(" | ") + " |";
+    lines.push(headerLine);
+    lines.push(separatorLine);
+
+    for (let i = dataStartIndex; i < rows.length; i++) {
+      const row = rows[i];
+      const cells = row.querySelectorAll("td, th");
+      if (!cells || cells.length === 0) continue;
+      const mdCells = Array.from(cells).map(cellToMd);
+      lines.push("| " + mdCells.join(" | ") + " |");
+    }
+
+    return "\n" + lines.join("\n") + "\n";
+  },
 });
 
 // Rewrite relative links to absolute Wikipedia links
@@ -30,16 +102,24 @@ turndown.addRule("absoluteLinks", {
   },
 });
 
-// Simplify output: drop images, tables, references sections, nav boxes
+// Simplify output: drop images, metadata and certain tables but keep content tables
 function preprocessWikipediaHtml(html) {
-  // Remove tables, infoboxes, navboxes, thumbnails, and reference superscripts
-  return html
-    .replace(/<table[\s\S]*?<\/table>/gi, "")
-    .replace(/<figure[\s\S]*?<\/figure>/gi, "")
-    .replace(/<img[\s\S]*?>/gi, "")
-    .replace(/<sup[^>]*class="reference"[\s\S]*?<\/sup>/gi, "")
-    .replace(/<style[\s\S]*?<\/style>/gi, "")
-    .replace(/<script[\s\S]*?<\/script>/gi, "");
+  return (
+    html
+      // Remove sidebars/navboxes (common classes in Wikipedia HTML)
+      .replace(
+        /<table[^>]*class=\"[^"]*(sidebar|navbox|vertical-navbox|metadata)[^\"]*\"[\s\S]*?<\/table>/gi,
+        "",
+      )
+      // Remove reference superscripts
+      .replace(/<sup[^>]*class=\"reference\"[\s\S]*?<\/sup>/gi, "")
+      // Remove figures/images
+      .replace(/<figure[\s\S]*?<\/figure>/gi, "[figure]")
+      .replace(/<img[\s\S]*?>/gi, "[image]")
+      // Remove styles/scripts
+      .replace(/<style[\s\S]*?<\/style>/gi, "")
+      .replace(/<script[\s\S]*?<\/script>/gi, "")
+  );
 }
 
 async function fetchWikipediaHtml(slug) {
