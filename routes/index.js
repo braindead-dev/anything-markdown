@@ -1,4 +1,6 @@
 const express = require('express');
+const wikipediaRouter = require('./wikipedia');
+
 const router = express.Router();
 
 // Homepage
@@ -12,5 +14,8 @@ router.get('/sources', (req, res) => {
     platforms: ["wikipedia"]
   });
 });
+
+// Platform routers
+router.use('/wikipedia', wikipediaRouter);
 
 module.exports = router;
