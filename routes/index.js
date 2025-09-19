@@ -72,7 +72,7 @@ router.get("/", (req, res) => {
     
     <p>Welcome to anything-markdown! A tool for converting any platform into markdown.</p>
     
-    <p>📋 View available platforms <a href="/sources">here</a></p>
+    <p>📋 View available platforms <a href="/platforms">here</a></p>
     
     <div class="example">
         <strong>How to use:</strong><br>
@@ -82,14 +82,16 @@ router.get("/", (req, res) => {
     
     <div class="footer">
         made with ❤️ by <a href="https://henr.ee" target="_blank">henry</a>
+        <br>
+        contribute on <a href="https://github.com/braindead-dev/anything-markdown" target="_blank">github</a>!
     </div>
 </body>
 </html>`;
   res.send(html);
 });
 
-// Available sources/platforms (from registry)
-router.get("/sources", (req, res) => {
+// Available platforms (from registry)
+router.get("/platforms", (req, res) => {
   res.json({
     platforms: Object.keys(registry),
   });
