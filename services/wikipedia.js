@@ -113,8 +113,7 @@ function preprocessWikipediaHtml(html) {
       )
       // Remove reference superscripts
       .replace(/<sup[^>]*class=\"reference\"[\s\S]*?<\/sup>/gi, "")
-      // Remove figures/images
-      .replace(/<figure[\s\S]*?<\/figure>/gi, "[figure]")
+      // Remove images
       .replace(/<img[\s\S]*?>/gi, "[image]")
       // Remove styles/scripts
       .replace(/<style[\s\S]*?<\/style>/gi, "")
