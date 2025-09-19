@@ -81,7 +81,7 @@ router.get("/", (req, res) => {
     </div>
     
     <div class="footer">
-        made with ❤️ by <a href="https://github.com/braindead-dev">braindead-dev</a>
+        made with ❤️ by <a href="https://henr.ee" target="_blank">henry</a>
     </div>
 </body>
 </html>`;
