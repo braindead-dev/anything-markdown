@@ -9,7 +9,7 @@ const turndown = new TurndownService({
 
 turndown.use(gfm);
 
-// Custom: Convert any HTML table to GFM pipe table (handles captions and <th>)
+// Convert any HTML table to GFM pipe table (handles captions and <th>)
 turndown.addRule("wikitableToMarkdown", {
   filter: function (node) {
     return node.nodeName && node.nodeName.toLowerCase() === "table";
